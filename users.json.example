@@ -1,0 +1,6 @@
+{
+    "UserTemplate": {
+        "password": "hashed_password_placeholder",
+        "face_data": "recorded_video/sample_user.mp4"
+    }
+}
