@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Face Recognition Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2"></script>
+</head>
+<body class="min-h-screen bg-gray-900 text-white flex flex-col">
+    <div class="flex-1">
+        <nav class="bg-gray-800 shadow">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <a href="/login" class="flex items-center">
+                            <i class="fas fa-arrow-left text-white text-2xl"></i>
+                            <span class="ml-2 text-2xl font-semibold text-white">Face Recognition Login</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-2xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+            <div class="bg-gray-800 shadow rounded-lg overflow-hidden">
+                <div class="p-6 space-y-6">
+                    <div class="aspect-w-16 aspect-h-9 bg-gray-700 rounded-lg overflow-hidden relative">
+                        <video id="video-feed" autoplay playsinline 
+                               class="w-full h-full object-cover"></video>
+                        <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-gray-900">
+                            <div class="text-center">
+                                <div class="animate-ping inline-flex h-4 w-4 rounded-full bg-blue-500 opacity-75 mb-6"></div>
+                                <p class="text-white text-base">Initializing camera...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <p id="status-message" class="text-base text-gray-300">
+                            Please position your face within the frame
+                        </p>
+                        <div class="mt-2">
+                            <span class="inline-flex items-center px-3.5 py-1 rounded-full text-sm font-medium bg-blue-600 text-white">
+                                <i class="fas fa-circle text-xs mr-1"></i>
+                                <span id="scan-status">Ready to scan</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 space-y-4">
+                        <button id="verify-button" onclick="startVerification()" 
+                                class="w-full rounded-lg bg-green-600 text-white py-3 px-6 text-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                            <i class="fas fa-camera mr-2"></i>
+                            Verify Face
+                        </button>
+                        <a href="/login">
+                            <button class="w-full rounded-lg bg-blue-600 text-white py-3 px-6 text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                <i class="fas fa-key mr-2"></i>
+                                Try Another Method
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let stream = null;
+        let videoElement = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            videoElement = document.getElementById('video-feed');
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(mediaStream) {
+                    stream = mediaStream;
+                    videoElement.srcObject = stream;
+                    loadingOverlay.style.display = 'none';
+                })
+                .catch(function(err) {
+                    loadingOverlay.innerHTML = `
+                        <div class="text-center text-red-500">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                            <p>Camera error: ${err.message}</p>
+                        </div>
+                    `;
+                });
+        });
+
+        function startVerification() {
+            const button = document.getElementById('verify-button');
+            const statusMessage = document.getElementById('status-message');
+            const scanStatus = document.getElementById('scan-status');
+
+            // Disable button and update status
+            button.disabled = true;
+            button.classList.add('opacity-50');
+            statusMessage.textContent = 'Verifying your face...';
+            scanStatus.textContent = 'Scanning...';
+
+            // Capture current frame from video
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+            // Convert to blob and send
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
+
+                fetch('/verify_face', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        statusMessage.textContent = 'Verification successful!';
+                        scanStatus.textContent = 'Verified';
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                        window.location.href = data.redirect;
+                    } else {
+                        throw new Error(data.message || 'Verification failed');
+                    }
+                })
+                .catch(error => {
+                    statusMessage.textContent = error.message;
+                    scanStatus.textContent = 'Failed';
+                    button.disabled = false;
+                    button.classList.remove('opacity-50');
+
+                    setTimeout(() => {
+                        statusMessage.textContent = 'Please position your face within the frame';
+                        scanStatus.textContent = 'Ready to scan';
+                    }, 3000);
+                });
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Clean up video stream when leaving page
+        window.onbeforeunload = function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>NUDGE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <style>
+        body { background-color: #121212; font-family: 'Poppins', sans-serif; } 
+        .neon-text { color: #00FFFF; text-shadow: 0 0 10px #00FFFF; } 
+        .neon-button { transition: all 0.3s ease; } 
+        .neon-button:hover { box-shadow: 0 0 15px #00FFFF; transform: scale(1.05); } 
+        @keyframes softGlow { 
+            0% { text-shadow: 0 0 10px #00FFFF; } 
+            50% { text-shadow: 0 0 20px #00FFFF; } 
+            100% { text-shadow: 0 0 10px #00FFFF; } 
+        } 
+        .glow-animation { animation: softGlow 2s infinite; }
+    </style>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center">
+    <div class="w-full max-w-8xl flex flex-col items-center space-y-12">
+        <h1 class="text-8xl font-bold neon-text glow-animation tracking-wider">NUDGE</h1>
+        
+        <div class="flex space-x-6">
+            <button onclick="window.location.href='/signup'" class="neon-button !rounded-button bg-[#1E1E1E] text-[#00FFFF] px-8 py-3 text-lg font-medium flex items-center space-x-2">
+                <i class="fas fa-user-plus"></i>
+                <span>Sign Up</span>
+            </button>
+            <button onclick="window.location.href='/face_login'" class="neon-button !rounded-button bg-[#1E1E1E] text-[#00FFFF] px-8 py-3 text-lg font-medium flex items-center space-x-2">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Login</span>
+            </button>
+        </div>
+        
+    </div>
+</body>
+</html>

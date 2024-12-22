@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Driver Management Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-[Inter]">
+    <div style="position: fixed; top: 16px; left: 16px; z-index: 50; font-weight: bold; font-size: 20px; display: flex; align-items: center;">
+        <button class="text-gray-400 hover:text-gray-200"><i class="fas fa-arrow-left"></i></button>
+        <span class="ml-4">NUDGE</span>
+    </div>
+    
+    <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center items-center min-h-screen">
+        <div class="max-w-6xl w-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-lg p-8 transition-transform hover:scale-105 hover:shadow-2xl">
+            <h1 class="text-3xl font-bold text-gray-100 mb-6">Settings</h1>
+            <div class="space-y-6">
+                <div class="pb-6 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-100 mb-4">Profile Settings</h2>
+                    <div class="flex items-center space-x-4">
+                        <img class="h-20 w-20 rounded-full object-cover border-4 border-gray-700 shadow-lg" src="https://creatie.ai/ai/api/search-image?query=A%20professional%20headshot..." alt="Profile"/>
+                    </div>
+                </div>
+                <div class="pb-6 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-100 mb-4">Settings</h2>
+                    <div class="space-y-4">
+                        <div class="w-full flex items-center justify-between px-4 py-3 border border-gray-600 rounded-lg bg-gray-800 hover:bg-gray-700 transition duration-300 ease-in-out shadow-md">
+                            <span class="text-gray-300">Alarm Sound</span>
+                            <select class="w-28 form-select rounded-lg border-gray-600 bg-gray-700 text-gray-100 focus:border-custom focus:ring-custom">
+                                <option value="chime">Chime</option>
+                                <option value="bell">Bell</option>
+                                <option value="digital">Digital</option>
+                                <option value="marimba">Marimba</option>
+                                <option value="xylophone">Xylophone</option>
+                            </select>
+                        </div>
+                        <button class="w-full flex items-center justify-between px-4 py-3 border border-gray-600 rounded-lg bg-gray-800 hover:bg-gray-700 transition duration-300 ease-in-out shadow-md">
+                            <span class="text-gray-300">Switch Profile</span>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                        <button class="w-full flex items-center justify-between px-4 py-3 border border-gray-600 rounded-lg bg-gray-800 hover:bg-gray-700 transition duration-300 ease-in-out shadow-md">
+                            <span class="text-gray-300">Delete History</span>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-6">
+                    <button class="w-full bg-red-600 text-white px-5 py-3 rounded-lg text-lg font-medium hover:bg-red-700 shadow-lg transition duration-300 ease-in-out">Logout</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700">
+        <div class="max-w-8xl mx-auto px-4 py-4">
+            <div class="flex justify-center space-x-4">
+                <button class="!rounded-button px-6 py-3 bg-custom text-white font-medium hover:bg-custom/90 transition-colors shadow-md">
+                    <i class="fas fa-play mr-2"></i>Start
+                </button>
+                <button class="!rounded-button px-6 py-3 bg-gray-500 text-white font-medium hover:bg-gray-600 transition-colors shadow-md">
+                    <i class="fas fa-pause mr-2"></i>Pause
+                </button>
+                <button class="!rounded-button px-6 py-3 bg-gray-700 text-gray-300 font-medium hover:bg-gray-600 transition-colors shadow-md" 
+                    onclick="window.location.href='driverhistory.html'">
+                    <i class="fas fa-history mr-2"></i>History
+                </button>
+                <button class="!rounded-button px-6 py-3 bg-gray-700 text-gray-300 font-medium hover:bg-gray-600 transition-colors shadow-md">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </button>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

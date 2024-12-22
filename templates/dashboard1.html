@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Driver Drowsiness Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .animate-gradient-x {
+            background-size: 200% 200%;
+            animation: gradient-x 15s ease infinite;
+        }
+        @keyframes gradient-x {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-black via-gray-950 to-black min-h-screen text-white">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <!-- Header Section -->
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-white bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">Driver Drowsiness Detection</h1>
+            <div class="flex items-center space-x-4">
+                <p class="text-white">Welcome, <span class="font-bold">{{ user }}</span></p>
+                <div id="system-status" class="flex items-center">
+                    <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    <span class="text-sm text-gray-400">System Inactive</span>
+                </div>
+                <div class="text-sm text-gray-400">
+                    <i class="far fa-clock mr-2"></i>
+                    <span id="current-time"></span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-950/90 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-gray-900">
+                <div class="video-container rounded-lg mb-4 overflow-hidden">
+                    <img id="videoFeed" 
+                         src="/video_feeds" 
+                         alt="Camera Feed"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-400">Camera Status</p>
+                        <p id="camera-status" class="text-red-500 font-medium">Disconnected</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Detection Status</p>
+                        <p id="detection-status" class="text-red-500 font-medium">Stopped</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Section -->
+            <div class="space-y-6">
+                <!-- Drowsiness & Blinks -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-gray-950/90 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-900">
+                        <h3 class="text-lg font-medium text-white mb-4">Drowsiness Score</h3>
+                        <div id="drowsiness-gauge" class="h-48"></div>
+                    </div>
+                    <div class="bg-gray-950/90 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-900">
+                        <h3 class="text-lg font-medium text-white mb-4">Detection Stats</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-400">Drowsy Alarms</p>
+                                <p id="drowsy-alarms" class="text-2xl font-bold text-blue-500">0</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Total Blinks</p>
+                                <p id="total-blinks" class="text-2xl font-bold text-purple-500">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Usage -->
+                <div class="bg-gray-950/90 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-gray-900">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-white">Mobile Usage Detection</h3>
+                        <div id="mobile-alarms" class="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">
+                            0 Alerts
+                        </div>
+                    </div>
+                    <div class="h-4 bg-gray-900 rounded-full overflow-hidden">
+                        <div id="mobile-score-bar" class="h-full bg-red-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="mobile-score-text" class="text-sm text-gray-400 mt-2">Current Score: 0%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <button id="startBtn" class="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 flex items-center hover:from-blue-600 hover:to-purple-700 transition-all duration-300">
+                <i class="fas fa-play mr-2"></i>Start Detection
+            </button>
+            <a href="/history" class="rounded-lg bg-gray-900 text-gray-200 px-6 py-2 flex items-center hover:bg-gray-800 transition-all duration-300">
+                <i class="fas fa-history mr-2"></i>View History
+            </a>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="drowsy-alarm" src="{{ url_for('static', filename='drowsy_alarm.wav') }}" preload="auto"></audio>
+    <audio id="mobile-alarm" src="{{ url_for('static', filename='mobile_alarm.wav') }}" preload="auto"></audio>
+
+    <script>
+        let isDetectionRunning = false;
+        let eventSource = null;
+
+        // Initialize drowsiness gauge
+        const drowsinessGauge = echarts.init(document.getElementById('drowsiness-gauge'));
+        drowsinessGauge.setOption({
+            series: [{
+                type: 'gauge',
+                min: 0,
+                max: 100,
+                progress: {
+                    show: true,
+                    width: 18
+                },
+                axisLine: {
+                    lineStyle: {
+                        width: 18,
+                        color: [
+                            [0.3, '#67e0e3'],
+                            [0.7, '#37a2da'],
+                            [1, '#fd666d']
+                        ]
+                    }
+                },
+                pointer: {
+                    icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+                    length: '12%',
+                    width: 20,
+                    offsetCenter: [0, '-60%'],
+                    itemStyle: {
+                        color: 'auto'
+                    }
+                },
+                axisTick: {
+                    length: 12,
+                    lineStyle: {
+                        color: 'auto',
+                        width: 2
+                    }
+                },
+                splitLine: {
+                    length: 20,
+                    lineStyle: {
+                        color: 'auto',
+                        width: 5
+                    }
+                },
+                axisLabel: {
+                    color: '#464646',
+                    fontSize: 20,
+                    distance: -60,
+                    formatter: function(value) {
+                        if (value === 0.5) {
+                            return '50';
+                        }
+                        return '';
+                    }
+                },
+                title: {
+                    offsetCenter: [0, '-20%'],
+                    fontSize: 16
+                },
+                detail: {
+                    fontSize: 30,
+                    offsetCenter: [0, '0%'],
+                    valueAnimation: true,
+                    formatter: function(value) {
+                        return Math.round(value) + '%';
+                    },
+                    color: 'auto'
+                },
+                data: [{
+                    value: 0,
+                    name: 'Score'
+                }]
+            }]
+        });
+
+        // Handle window resize for gauge
+        window.addEventListener('resize', function() {
+            drowsinessGauge.resize();
+        });
+
+        // Toggle detection
+        document.getElementById('startBtn').addEventListener('click', function() {
+            const endpoint = isDetectionRunning ? '/stop_detection' : '/start_detection';
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    isDetectionRunning = !isDetectionRunning;
+                    updateUI();
+                    if (isDetectionRunning) {
+                        startDetection();
+                    } else {
+                        stopDetection();
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        
+            function startDetection() {
+                const videoFeed = document.getElementById('videoFeed');
+                // Force refresh the video feed
+                videoFeed.src = "/video_feeds" + Date.now();
+                
+                // Add error handling
+                videoFeed.onerror = function() {
+                    console.error('Error loading video feed');
+                    this.src = 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%231a1a1a\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'white\'>Camera Error</text></svg>';
+                };
+                
+                // Rest of the startDetection code...
+            }
+
+            // Start SSE connection
+            eventSource = new EventSource("{{ url_for('alarm_stream') }}");
+            eventSource.onmessage = function(event) {
+                if (event.data.startsWith('metrics:')) {
+                    const metrics = JSON.parse(event.data.slice(8));
+                    updateMetrics(metrics);
+                } else if (event.data === 'drowsy-alarm') {
+                    document.getElementById('drowsy-alarm').play();
+                } else if (event.data === 'mobile-alarm') {
+                    document.getElementById('mobile-alarm').play();
+                }
+            };
+
+            // Update UI elements
+            document.getElementById('system-status').innerHTML = `
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                <span class="text-sm text-gray-400">System Active</span>
+            `;
+            document.getElementById('camera-status').textContent = 'Connected';
+            document.getElementById('camera-status').className = 'text-green-500 font-medium';
+            document.getElementById('detection-status').textContent = 'Running';
+            document.getElementById('detection-status').className = 'text-green-500 font-medium';
+            document.getElementById('startBtn').innerHTML = '<i class="fas fa-stop mr-2"></i>Stop Detection';
+        }
+
+        function stopDetection() {
+            // Stop video feed
+            const videoFeed = document.getElementById('videoFeed');
+            videoFeed.src = '';
+
+            // Close SSE connection
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            // Update UI elements
+            document.getElementById('system-status').innerHTML = `
+                <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                <span class="text-sm text-gray-400">System Inactive</span>
+            `;
+            document.getElementById('camera-status').textContent = 'Disconnected';
+            document.getElementById('camera-status').className = 'text-red-500 font-medium';
+            document.getElementById('detection-status').textContent = 'Stopped';
+            document.getElementById('detection-status').className = 'text-red-500 font-medium';
+            document.getElementById('startBtn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Detection';
+        }
+
+        function updateMetrics(metrics) {
+            // Update drowsiness gauge
+            drowsinessGauge.setOption({
+                series: [{
+                    data: [{
+                        value: metrics.drowsy_score
+                    }]
+                }]
+            });
+
+            // Update mobile score
+            const mobileScoreBar = document.getElementById('mobile-score-bar');
+            mobileScoreBar.style.width = metrics.mobile_score + '%';
+            document.getElementById('mobile-score-text').textContent = `Current Score: ${metrics.mobile_score}%`;
+
+            // Update counters
+            document.getElementById('drowsy-alarms').textContent = metrics.drowsy_alarms;
+            document.getElementById('mobile-alarms').textContent = `${metrics.mobile_alarms} Alerts`;
+            document.getElementById('total-blinks').textContent = metrics.total_blinks;
+        }
+
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Check initial detection status on page load
+        fetch("{{ url_for('get_detection_status') }}")
+            .then(response => response.json())
+            .then(data => {
+                isDetectionRunning = data.is_running;
+                if (isDetectionRunning) {
+                    startDetection();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>
