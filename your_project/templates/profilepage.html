@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Management Dashboard</title>
+    <!-- Add Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Add Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add ECharts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    
+    <!-- Add custom styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .gradient-header {
+            background: linear-gradient(to right, #9333ea, #3b82f6, #06b6d4);
+        }
+        .card {
+            background-color: #2d2d2d;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: rgba(147, 51, 234, 0.6);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen",data-username="{{ username }}">
+    <!-- Header -->
+    <div class="gradient-header fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center shadow-lg">
+        <a href="/" class="text-white hover:text-gray-200 flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>
+            <span class="text-2xl font-bold">NUDGE</span>
+        </a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 pt-20 pb-8">
+        <!-- Profile Information -->
+        <div class="card">
+            <h2 class="text-xl font-semibold mb-4">Profile Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Admin Name</label>
+                    <p class="font-medium">{{ admin.username if admin and admin.username else 'N/A' }}</p>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Total Driving Time</label>
+                    <p class="font-medium">{{ admin.total_driving_time if admin and admin.total_driving_time else '00:00:00' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drivers Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {% if drivers %}
+    <div class="drivers-section">
+        <h2>Drivers Information</h2>
+        <select id="userSelect" class="form-select">
+            {% for driver in drivers %}
+                <option value="{{ driver.username }}" {% if driver.username == username %}selected{% endif %}>
+                    {{ driver.name }} ({{ driver.license_number }})
+                </option>
+            {% endfor %}
+        </select>
+        <table class="driver-stats">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>License Number</th>
+                    <th>Drowsy Alarms</th>
+                    <th>Mobile Alarms</th>
+                    <th>Blink Rate</th>
+                    <th>Total Driving Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in drivers %}
+                <tr>
+                    <td>{{ driver.name }}</td>
+                    <td>{{ driver.license_number }}</td>
+                    <td>{{ driver.drowsy_alarm }}</td>
+                    <td>{{ driver.mobile_alarm }}</td>
+                    <td>{{ driver.blink_rate }}</td>
+                    <td>{{ driver.total_driving_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+        </div>
+        
+
+        <!-- Graph Section -->
+        <div class="card mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold">Driving Analytics</h2>
+                <select id="userSelect" class="bg-gray-700 text-white rounded px-4 py-2">
+                    {% for driver in drivers %}
+                    <option value="{{ driver.username }}">{{ driver.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="graphContainer" style="width: 100%; height: 400px;"></div>
+        </div>
+    </main>
+    <script>
+        let chart = null;
+    
+        function loadGraph() {
+            const licenseNumber = document.getElementById('userSelect').value;
+            
+            fetch(`/graph_data/${licenseNumber}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data); // Debug log
+                    if (data.error) throw new Error(data.error);
+                    
+                    if (chart) chart.dispose();
+                    chart = echarts.init(document.getElementById('graphContainer'));
+                    
+                    // Check if data is valid
+                    if (!data.labels || !data.datasets) {
+                        throw new Error('Invalid graph data format');
+                    }
+    
+                    const option = {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: {
+                            type: 'category',
+                            data: data.labels,
+                            axisLabel: { 
+                                color: '#fff',
+                                rotate: 45,
+                                formatter: value => value.split(' ')[1].substr(0, 5) // Show time (HH:mm)
+                            }
+                        },
+                        yAxis: { type: 'value', axisLabel: { color: '#fff' } },
+                        series: data.datasets.map(dataset => ({
+                            name: dataset.label,
+                            type: 'line',
+                            data: dataset.data,
+                            smooth: true,
+                            itemStyle: { color: dataset.backgroundColor }
+                        })),
+                        backgroundColor: 'transparent',
+                        textStyle: { color: '#fff' },
+                        legend: { textStyle: { color: '#fff' } }
+                    };
+                    
+                    chart.setOption(option);
+                })
+                .catch(error => {
+                    console.error('Error loading graph:', error);
+                    // Display error message on the page
+                    document.getElementById('graphContainer').innerHTML = 
+                        `<p class="text-red-500">Error: ${error.message}</p>`;
+                });
+        }
+    
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadGraph);
+        document.getElementById('userSelect').addEventListener('change', loadGraph);
+        window.addEventListener('resize', () => chart?.resize());
+    </script>
+</body>
+</html>

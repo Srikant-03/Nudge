@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        @keyframes blinkingGlow {
+            0% { box-shadow: 0px 0px 20px rgba(72, 202, 228, 0.6); }
+            50% { box-shadow: 0px 0px 30px rgba(72, 202, 228, 0.9); }
+            100% { box-shadow: 0px 0px 20px rgba(72, 202, 228, 0.6); }
+        }
+        .camera-container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            width: 500px;
+            animation: blinkingGlow 1.5s infinite alternate;
+        }
+        .camera-box {
+            background-color: #2c2c2c;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0px 0px 15px rgba(72, 202, 228, 0.5);
+            overflow: hidden;
+        }
+        .camera-box video {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        .status {
+            color: #48CAE4;
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        .scanning {
+            background-color: #48CAE4;
+            color: #121212;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0px 0px 12px rgba(72, 202, 228, 0.7);
+        }
+        .button {
+            background-color: #48CAE4;
+            color: #121212;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            box-shadow: 0px 0px 12px rgba(72, 202, 228, 0.7);
+        }
+        .button:hover {
+            background-color: #34a3c2;
+            box-shadow: 0px 0px 18px rgba(72, 202, 228, 0.9);
+        }
+        .timer {
+            font-size: 24px;
+            color: #48CAE4;
+            margin: 10px 0;
+        }
+        .recording-indicator {
+            color: #ff4444;
+            display: none;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="camera-container">
+            <h2>Face Sign Up</h2>
+            <div class="camera-box">
+                <img id="video-feed" src="{{ url_for('detection.video_feed') }}" alt="Video feed" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+            </div>
+            <p class="status">Please position your face within the frame</p>
+            <div class="timer" id="timer" style="display: none;">15</div>
+            <p class="recording-indicator" id="recordingIndicator">Recording in progress...</p>
+            <button class="scanning" id="startRecording">Start Recording</button>
+            <button class="button" id="confirm" style="display: none;">Confirm</button>
+        </div>
+    </div>
+    
+    <script>
+        const startButton = document.getElementById('startRecording');
+        const confirmButton = document.getElementById('confirm');
+        const timer = document.getElementById('timer');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        
+        let timeLeft = 15;
+        let timerInterval;
+        
+        startButton.addEventListener('click', async () => {
+            startButton.disabled = true;
+            timer.style.display = 'block';
+            recordingIndicator.style.display = 'block';
+            timeLeft = 15;
+            timer.textContent = timeLeft;
+        
+            // Start countdown timer immediately
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timer.textContent = timeLeft;
+        
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    recordingComplete();
+                }
+            }, 1000);
+        
+            // Start the recording process (don't wait for response)
+            fetch('/start_face_registration', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Face registration successful:', data.video_path);
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during recording: ' + error.message);
+            resetInterface();
+        });
+});
+        
+        
+        function recordingComplete() {
+            timer.style.display = 'none';
+            recordingIndicator.style.display = 'none';
+            startButton.style.display = 'none';
+            confirmButton.style.display = 'block';
+        }
+        
+        function resetInterface() {
+            startButton.disabled = false;
+            timer.style.display = 'none';
+            recordingIndicator.style.display = 'none';
+            timeLeft = 15;
+            timer.textContent = timeLeft;
+            clearInterval(timerInterval);
+        }
+        
+        confirmButton.addEventListener('click', () => {
+            window.location.href = '/face_login';
+        });
+    </script>
+</body>
+</html>

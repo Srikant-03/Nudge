@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Driver Portal Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <style>.neon-glow { box-shadow: 0 0 35px rgba(66, 153, 225, 0.6); } .input-icon { background: linear-gradient(45deg, #4299e1, #9f7aea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; } body { background: linear-gradient(135deg, #111827, #1f2937); font-family: &#39;Inter&#39;, sans-serif; } input::placeholder { opacity: 0.7; transition: opacity 0.2s; } input:focus::placeholder { opacity: 0.5; }</style>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-900">
+    <div class="w-full max-w-xl px-8">
+        <button class="absolute top-8 left-8 text-gray-400 hover:text-custom transition-colors">
+            <i class="fas fa-arrow-left text-xl"></i>
+        </button>
+        
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-10 rounded-lg neon-glow transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]">
+            <h1 class="text-4xl font-bold text-white mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Welcome Back</h1>
+            
+            <form class="space-y-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-300">Driver&#39;s License Number</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <i class="fas fa-id-card input-icon"></i>
+                        </div>
+                        <input type="text" class="!rounded-button block w-full pl-10 pr-3 py-2.5 bg-gray-700/50 backdrop-blur-sm border border-gray-600 text-white placeholder-gray-400 focus:ring-custom focus:border-custom transition-all duration-200" placeholder="Enter your license number"/>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-300">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock input-icon"></i>
+                        </div>
+                        <input type="password" class="!rounded-button block w-full pl-10 pr-10 py-2.5 bg-gray-700/50 backdrop-blur-sm border border-gray-600 text-white placeholder-gray-400 focus:ring-custom focus:border-custom transition-all duration-200" placeholder="Enter your password"/>
+                        <button type="button" class="absolute inset-y-0 right-3 flex items-center">
+                            <i class="fas fa-eye input-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="!rounded-button w-full flex items-center justify-center py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800 transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.6)]">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.querySelector('.fa-eye').addEventListener('click', function() {
+            const input = this.parentElement.previousElementSibling;
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
