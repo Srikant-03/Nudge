@@ -1,0 +1,13 @@
+train: F:\Drowsiness_Iot\datasets\train\images
+val: F:\Drowsiness_Iot\datasets\valid\images
+test: F:\Drowsiness_Iot\datasets\test\images
+
+nc: 6
+names: ['LeftRight', 'child', 'drowsy', 'mobile', 'person', 'talking']
+
+roboflow:
+  workspace: staps
+  project: fullmodel-xwkuv
+  version: 4
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/staps/fullmodel-xwkuv/dataset/4
